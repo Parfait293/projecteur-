@@ -3,93 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Projo-Connect Responsive</title>
+    <title>Projo-Connect | Download Edition</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #6366f1; --bg: #0f172a; --panel: #1e293b; --accent: #10b981; --danger: #ef4444; }
-        
         * { box-sizing: border-box; }
         body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* HEADER */
-        header { height: 50px; background: var(--panel); display: flex; align-items: center; padding: 0 15px; justify-content: space-between; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        header { height: 50px; background: var(--panel); display: flex; align-items: center; padding: 0 15px; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); }
         #codeBadge { background: var(--primary); padding: 4px 12px; border-radius: 15px; font-weight: 800; font-size: 0.9rem; }
 
-        /* MAIN LAYOUT */
-        .main-container { flex: 1; display: flex; overflow: hidden; position: relative; flex-direction: row; }
-
-        /* ZONE DE COURS (PRIORITAIRE) */
-        .viewport { flex: 3; background: #000; position: relative; overflow-y: auto; display: flex; justify-content: center; align-items: flex-start; scrollbar-width: none; }
-        #mediaContainer { width: 100%; min-height: 100%; display: flex; flex-direction: column; align-items: center; padding: 10px; }
-        #mediaContainer iframe, #mediaContainer video, #mediaContainer img { width: 100%; border: none; border-radius: 4px; background: #fff; }
-        #mediaContainer iframe { height: 80vh; }
-
-        /* SIDEBAR CHAT (ADAPTATIVE) */
-        .sidebar { flex: 1; min-width: 280px; background: var(--panel); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; z-index: 5; }
-        .chat-area { flex: 1; overflow-y: auto; padding: 10px; font-size: 0.8rem; }
-        .chat-msg { margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 6px; border-left: 3px solid var(--primary); }
-
-        /* CONTROLES */
-        footer { background: var(--panel); padding: 10px; display: flex; gap: 8px; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); z-index: 10; flex-wrap: wrap; }
-        .btn { border: none; padding: 10px; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; font-size: 0.8rem; background: var(--primary); transition: 0.2s; }
-        .btn-accent { background: var(--accent); }
-        .btn-danger { background: var(--danger); }
-        input { background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; outline: none; font-size: 0.9rem; }
-
-        /* RESPONSIVE MOBILE */
-        @media (max-width: 768px) {
-            .main-container { flex-direction: column; }
-            .sidebar { flex: none; height: 180px; width: 100%; border-left: none; border-top: 1px solid rgba(255,255,255,0.1); }
-            .viewport { flex: 1; }
-            #mediaContainer iframe { height: 50vh; }
-            .prof-input-group { width: 100%; display: flex; gap: 5px; }
+        .main-container { flex: 1; display: flex; overflow: hidden; }
+        .viewport { flex: 3; background: #000; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 10px; position: relative; }
+        
+        /* Bouton de téléchargement flottant */
+        #downloadBtn { 
+            position: absolute; top: 20px; right: 20px; z-index: 100; 
+            background: var(--accent); color: white; padding: 10px 15px; 
+            border-radius: 8px; text-decoration: none; font-weight: bold; 
+            display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
-        /* OVERLAY CONNEXION */
-        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .card { background: var(--panel); padding: 25px; border-radius: 20px; width: 100%; max-width: 340px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        #mediaContainer { width: 100%; }
+        #mediaContainer iframe { width: 100%; height: 75vh; border: none; background: white; border-radius: 8px; }
+        #mediaContainer img, #mediaContainer video { width: 100%; border-radius: 8px; }
+
+        .sidebar { flex: 1; min-width: 280px; background: var(--panel); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
+        .chat-area { flex: 1; overflow-y: auto; padding: 10px; }
+        .chat-msg { margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 0.85rem; border-left: 3px solid var(--primary); }
+        .chat-msg b { color: var(--primary); display: block; font-size: 0.75rem; margin-bottom: 2px; }
+
+        footer { background: var(--panel); padding: 10px; display: flex; gap: 8px; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); flex-wrap: wrap; }
+        .btn { border: none; padding: 10px 15px; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; background: var(--primary); }
+        .btn-accent { background: var(--accent); }
+        input { background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; outline: none; }
+
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; }
+            .sidebar { height: 200px; border-left: none; }
+            #mediaContainer iframe { height: 45vh; }
+        }
+
+        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 200; display: flex; align-items: center; justify-content: center; }
+        .card { background: var(--panel); padding: 30px; border-radius: 20px; width: 340px; text-align: center; }
         .hidden { display: none !important; }
-        .big-code { font-size: 2.5rem; font-weight: 800; color: var(--primary); letter-spacing: 5px; margin: 15px 0; border: 2px dashed #444; border-radius: 10px; padding: 10px; }
     </style>
 </head>
 <body>
 
 <div id="setup" class="overlay">
     <div class="card">
-        <h2 style="margin:0 0 10px 0">📽️ Projo-Connect</h2>
-        <div id="init-view">
-            <input type="text" id="userName" placeholder="Ton Nom" style="width:100%; margin-bottom:10px;">
-            <button class="btn" style="width:100%;" onclick="createRoom()">➕ Créer une Salle</button>
-            <div style="margin: 15px 0; opacity: 0.2;">— OU —</div>
-            <input type="text" id="inputCode" placeholder="Code à 4 chiffres" style="width:100%; text-align:center; font-weight:800;">
-            <button class="btn btn-accent" style="width:100%;" onclick="joinRoom()">🔗 Rejoindre</button>
+        <h2 style="margin-bottom:20px">📽️ Projo-Connect</h2>
+        <div id="login-form">
+            <input type="text" id="userName" placeholder="Ton nom complet" style="width:100%; margin-bottom:15px">
+            <button class="btn" style="width:100%; margin-bottom:10px" onclick="createRoom()">➕ Créer Salle (Prof)</button>
+            <div style="margin: 10px 0; opacity:0.3">OU</div>
+            <input type="text" id="inputCode" placeholder="Code à 4 chiffres" style="width:100%; text-align:center; font-weight:bold; margin-bottom:10px">
+            <button class="btn btn-accent" style="width:100%" onclick="joinRoom()">🔗 Rejoindre</button>
         </div>
         <div id="wait-view" class="hidden">
-            <p style="margin:0">Salle Prête ! Code :</p>
-            <div class="big-code" id="displayCode">----</div>
-            <button class="btn" style="width:100%" onclick="closeSetup()">Lancer le Cours</button>
+            <h1 id="displayCode" style="font-size:3rem; color:var(--primary); margin:10px 0">----</h1>
+            <button class="btn" style="width:100%" onclick="openDashboard()">Lancer le Cours</button>
         </div>
     </div>
 </div>
 
 <header>
     <div id="codeBadge">CODE: ----</div>
-    <div id="userLabel" style="font-size: 0.75rem; opacity: 0.7;">Déconnecté</div>
+    <div id="idBadge" style="font-size:0.8rem;">Utilisateur: ---</div>
 </header>
 
 <div class="main-container">
-    <div class="viewport" id="scrollZone">
+    <div class="viewport">
+        <a id="downloadBtn" download="cours-document">📥 Télécharger le fichier</a>
+        
         <div id="mediaContainer">
-            <div style="margin-top: 50px; opacity: 0.3; text-align: center;">En attente de contenu...</div>
+            <div style="margin-top:80px; opacity:0.2; text-align:center">En attente...</div>
         </div>
     </div>
-
     <aside class="sidebar">
         <div class="chat-area" id="chatBox"></div>
-        <div style="padding: 8px; display: flex; gap: 5px; background: rgba(0,0,0,0.2);">
-            <input type="text" id="msgInput" placeholder="Message..." style="flex:1; padding:8px; margin:0">
-            <button class="btn" onclick="sendChat()" style="padding:8px">OK</button>
+        <div style="padding:10px; display:flex; gap:5px; background:rgba(0,0,0,0.2)">
+            <input type="text" id="msgInput" placeholder="Message..." style="flex:1; margin:0">
+            <button class="btn" onclick="sendChat()">OK</button>
         </div>
     </aside>
 </div>
@@ -98,11 +95,9 @@
     <button id="micBtn" class="btn" onclick="toggleMic()">🎤 Mic</button>
     <div id="profTools" class="hidden" style="display:flex; gap:5px; flex:1">
         <button class="btn" onclick="document.getElementById('fileIn').click()">📁</button>
-        <div class="prof-input-group" style="flex:1; display:flex; gap:5px;">
-            <input type="text" id="webUrl" placeholder="Lien..." style="flex:1; margin:0; padding:8px;">
-            <button class="btn btn-accent" onclick="shareWeb()">🌐</button>
-        </div>
-        <button id="removeBtn" class="btn btn-danger hidden" onclick="clearMedia()">🗑️</button>
+        <input type="text" id="webUrl" placeholder="Lien (URL)..." style="flex:1; margin:0">
+        <button class="btn btn-accent" onclick="shareWeb()">🌐 Envoyer</button>
+        <button id="removeBtn" class="btn" style="background:var(--danger); display:none" onclick="clearMedia()">🗑️</button>
     </div>
     <input type="file" id="fileIn" hidden onchange="handleFile(this)">
 </footer>
@@ -111,56 +106,82 @@
 
 <script>
     let peer, myConn, connections = [];
-    let isProf = false, currentContent = null, localStream = null, generatedCode = "";
+    let isProf = false, currentContent = null, localStream = null, roomCode = "";
+    let myName = "";
 
     function createRoom() {
-        generatedCode = Math.floor(1000 + Math.random() * 9000).toString();
-        peer = new Peer("ROOM-" + generatedCode);
+        myName = document.getElementById('userName').value.trim();
+        if(!myName) return alert("Nom requis.");
+        roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+        peer = new Peer("ROOM-" + roomCode);
         peer.on('open', () => {
             isProf = true;
-            document.getElementById('init-view').classList.add('hidden');
+            document.getElementById('login-form').classList.add('hidden');
             document.getElementById('wait-view').classList.remove('hidden');
-            document.getElementById('displayCode').innerText = generatedCode;
-            document.getElementById('codeBadge').innerText = "CODE: " + generatedCode;
-            document.getElementById('userLabel').innerText = "Prof: " + (document.getElementById('userName').value || "Anonyme");
+            document.getElementById('displayCode').innerText = roomCode;
+            document.getElementById('idBadge').innerText = "Prof: " + myName;
+            document.getElementById('codeBadge').innerText = "CODE: " + roomCode;
         });
         peer.on('connection', (conn) => {
             connections.push(conn);
-            setupEvents(conn);
+            conn.on('data', (data) => handleData(data));
             if(currentContent) setTimeout(() => conn.send(currentContent), 1000);
         });
         handleMicCalls();
     }
 
     function joinRoom() {
+        myName = document.getElementById('userName').value.trim();
         const code = document.getElementById('inputCode').value.trim();
-        const name = document.getElementById('userName').value.trim() || "Élève";
+        if(!myName || !code) return alert("Nom et Code requis.");
         peer = new Peer();
         peer.on('open', () => {
-            myConn = peer.connect("ROOM-" + code, { metadata: { name: name } });
-            setupEvents(myConn);
+            myConn = peer.connect("ROOM-" + code, { metadata: { name: myName } });
             myConn.on('open', () => {
+                isProf = false;
+                document.getElementById('idBadge').innerText = "Élève: " + myName;
                 document.getElementById('codeBadge').innerText = "CODE: " + code;
-                document.getElementById('userLabel').innerText = "Élève: " + name;
                 document.getElementById('setup').classList.add('hidden');
             });
+            myConn.on('data', (data) => handleData(data));
         });
         handleMicCalls();
     }
 
-    function closeSetup() { document.getElementById('setup').classList.add('hidden'); document.getElementById('profTools').classList.remove('hidden'); }
-
-    function setupEvents(c) {
-        c.on('data', (data) => {
-            if(data.type === 'file') renderMedia(data.content, data.mime);
-            if(data.type === 'remove') renderMedia(null, null);
-            if(data.type === 'chat') addMessage(data.user, data.msg);
-        });
+    function handleData(data) {
+        if(data.type === 'file') renderMedia(data.content, data.mime);
+        if(data.type === 'remove') renderMedia(null, null);
+        if(data.type === 'chat') addMessage(data.user, data.msg);
     }
 
-    function handleMicCalls() {
-        peer.on('call', (call) => { call.answer(null); call.on('stream', (s) => { document.getElementById('remoteAudio').srcObject = s; }); });
+    function renderMedia(data, mime) {
+        const zone = document.getElementById('mediaContainer');
+        const dlBtn = document.getElementById('downloadBtn');
+        
+        if(!data) { 
+            zone.innerHTML = `<div style="margin-top:80px; opacity:0.2; text-align:center">Fin de session</div>`; 
+            dlBtn.style.display = "none";
+            return; 
+        }
+
+        // Gestion du bouton téléchargement (sauf pour les liens web)
+        if(mime !== 'url/web') {
+            dlBtn.href = data;
+            dlBtn.style.display = "block";
+        } else {
+            dlBtn.style.display = "none";
+        }
+
+        if(mime === 'url/web' || mime.includes('pdf')) {
+            zone.innerHTML = `<iframe src="${data}" allow="autoplay; fullscreen"></iframe>`;
+        } else if(mime.includes('video')) {
+            zone.innerHTML = `<video src="${data}" controls autoplay></video>`;
+        } else {
+            zone.innerHTML = `<img src="${data}">`;
+        }
     }
+
+    function openDashboard() { document.getElementById('setup').classList.add('hidden'); document.getElementById('profTools').classList.remove('hidden'); }
 
     function handleFile(input) {
         const file = input.files[0];
@@ -169,7 +190,7 @@
             currentContent = { type: 'file', content: e.target.result, mime: file.type };
             renderMedia(currentContent.content, currentContent.mime);
             broadcast(currentContent);
-            document.getElementById('removeBtn').classList.remove('hidden');
+            document.getElementById('removeBtn').style.display = 'block';
         };
         reader.readAsDataURL(file);
     }
@@ -180,39 +201,22 @@
         currentContent = { type: 'file', content: url, mime: 'url/web' };
         renderMedia(url, 'url/web');
         broadcast(currentContent);
-        document.getElementById('removeBtn').classList.remove('hidden');
+        document.getElementById('removeBtn').style.display = 'block';
     }
 
-    function clearMedia() {
-        renderMedia(null, null);
-        broadcast({ type: 'remove' });
-        document.getElementById('removeBtn').classList.add('hidden');
-    }
-
-    function renderMedia(data, mime) {
-        const zone = document.getElementById('mediaContainer');
-        if(!data) { zone.innerHTML = `<div style="margin-top:50px;opacity:0.3;">Fin de diffusion</div>`; return; }
-        if(mime === 'url/web' || mime.includes('pdf')) {
-            zone.innerHTML = `<iframe src="${data}" allow="autoplay; fullscreen"></iframe>`;
-        } else if(mime.includes('video')) {
-            zone.innerHTML = `<video src="${data}" controls autoplay></video>`;
-        } else {
-            zone.innerHTML = `<img src="${data}">`;
-        }
-    }
+    function clearMedia() { renderMedia(null, null); broadcast({ type: 'remove' }); document.getElementById('removeBtn').style.display = 'none'; }
 
     function sendChat() {
         const msg = document.getElementById('msgInput').value;
         if(!msg) return;
-        const u = document.getElementById('userName').value || "Utilisateur";
-        broadcast({ type: 'chat', user: u, msg: msg });
+        broadcast({ type: 'chat', user: myName, msg: msg });
         addMessage("Moi", msg);
         document.getElementById('msgInput').value = "";
     }
 
     function addMessage(u, m) {
         const box = document.getElementById('chatBox');
-        box.innerHTML += `<div class="chat-msg"><b>${u}:</b> ${m}</div>`;
+        box.innerHTML += `<div class="chat-msg"><b>${u}</b>${m}</div>`;
         box.scrollTop = box.scrollHeight;
     }
 
@@ -222,15 +226,19 @@
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 btn.classList.add('btn-accent');
-                const code = isProf ? generatedCode : document.getElementById('inputCode').value;
+                const code = isProf ? roomCode : document.getElementById('inputCode').value;
                 if(isProf) connections.forEach(c => peer.call(c.peer, localStream));
                 else peer.call("ROOM-" + code, localStream);
-            } catch(e) { alert("Micro bloqué"); }
+            } catch(e) { alert("Micro inaccessible."); }
         } else {
             localStream.getTracks().forEach(t => t.stop());
             localStream = null;
             btn.classList.remove('btn-accent');
         }
+    }
+
+    function handleMicCalls() {
+        peer.on('call', (call) => { call.answer(null); call.on('stream', (s) => { document.getElementById('remoteAudio').srcObject = s; }); });
     }
 
     function broadcast(d) {

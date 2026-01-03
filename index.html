@@ -3,213 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Projo-Connect Innov'</title>
+    <title>Projo-Connect Ultimate v4</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #6366f1; --bg: #0f172a; --panel: #1e293b; --accent: #10b981; }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; overflow: hidden; }
+        :root { --primary: #6366f1; --bg: #0f172a; --panel: #1e293b; --accent: #10b981; --danger: #ef4444; }
         
-        /* Ecran d'accueil */
-        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-        .card { background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); width: 320px; text-align: center; }
+        body { 
+            margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; 
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
+        }
+
+        /* HEADER */
+        header { 
+            height: 50px; background: var(--panel); display: flex; align-items: center; 
+            padding: 0 20px; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* LAYOUT */
+        .container { display: flex; flex: 1; overflow: hidden; }
+
+        /* ZONE DE PROJECTION (SCROLLABLE) */
+        .viewport { 
+            flex: 1; position: relative; background: #000; overflow-y: auto; 
+            display: flex; flex-direction: column; align-items: center;
+        }
         
-        /* Layout Principal */
-        .main { flex: 1; display: none; flex-direction: column; }
-        .sidebar { width: 280px; background: var(--panel); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
-        
-        /* Zone de contenu */
-        .content { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; }
-        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; }
-        #canvas.active { pointer-events: auto; cursor: crosshair; }
-        
-        /* UI Elements */
-        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; margin: 5px 0; }
-        .btn-accent { background: var(--accent); }
-        input { background: rgba(0,0,0,0.2); border: 1px solid #333; color: white; padding: 12px; border-radius: 10px; width: calc(100% - 26px); margin: 5px 0; }
-        
+        #mediaContainer { width: 100%; padding: 20px 0; display: flex; flex-direction: column; align-items: center; }
+        #mediaContainer iframe, #mediaContainer video, #mediaContainer img { 
+            max-width: 95%; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            background: #fff;
+        }
+        #mediaContainer iframe { width: 90vw; height: 80vh; border: none; }
+        #mediaContainer video { width: 90%; }
+
+        /* SIDEBAR CHAT */
+        .sidebar { 
+            width: 300px; background: var(--panel); border-left: 1px solid rgba(255,255,255,0.1);
+            display: flex; flex-direction: column; 
+        }
         .chat-area { flex: 1; overflow-y: auto; padding: 15px; font-size: 0.85rem; }
-        .controls { padding: 10px; background: var(--panel); display: flex; gap: 5px; flex-wrap: wrap; }
-        .badge { background: var(--primary); padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; }
+        .chat-msg { margin-bottom: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; word-break: break-word; }
+
+        /* FOOTER CONTROLS */
+        footer { 
+            background: var(--panel); padding: 10px 15px; border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+        }
+
+        .btn { 
+            background: var(--primary); color: white; border: none; padding: 8px 12px; 
+            border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .btn-accent { background: var(--accent); }
+        .btn-danger { background: var(--danger); }
+        .mic-active { animation: pulse 1.5s infinite; background: var(--accent) !important; }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+
+        input[type="text"] { 
+            background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; 
+            padding: 8px; border-radius: 6px; outline: none;
+        }
+
+        /* OVERLAY CONNEXION */
+        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .card { background: var(--panel); padding: 30px; border-radius: 20px; width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div id="setup" class="overlay">
     <div class="card">
-        <h2>🚀 Projo-Connect</h2>
-        <input type="text" id="userName" placeholder="Ton nom">
-        <hr style="opacity:0.1; margin: 15px 0;">
-        <input type="text" id="roomName" placeholder="Nom de la salle">
-        <button class="btn" onclick="initSession(true)">➕ Créer la salle</button>
-        <button class="btn btn-accent" onclick="initSession(false)">🔗 Rejoindre</button>
-        <p id="status" style="font-size: 0.7rem; color: var(--primary); margin-top: 10px;">En attente...</p>
+        <h2 style="margin-top:0">🚀 Projo-Connect</h2>
+        <input type="text" id="userName" placeholder="Ton Nom" style="width: 100%; margin-bottom: 10px;">
+        <input type="text" id="roomName" placeholder="Nom de la salle" style="width: 100%; margin-bottom: 15px;">
+        <button class="btn" style="width:100%; margin-bottom:8px;" onclick="init(true)">➕ Créer Salle (Prof)</button>
+        <button class="btn btn-accent" style="width:100%;" onclick="init(false)">🔗 Rejoindre Salle</button>
+        <p id="netStatus" style="font-size: 0.7rem; color: var(--primary); margin-top: 15px;">Connexion au réseau...</p>
     </div>
 </div>
 
-<div id="app" class="main">
-    <div class="content" id="viewer">
-        <canvas id="canvas"></canvas>
-        <div id="mediaContainer" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
-            <p>En attente du professeur...</p>
+<header>
+    <div><b id="roomLabel">SALLE: ---</b></div>
+    <div id="userCount" style="font-size: 0.8rem; opacity: 0.6;">Participants: 0</div>
+</header>
+
+<div class="container">
+    <div class="viewport">
+        <div id="mediaContainer">
+            <div style="margin-top: 100px; opacity: 0.2;">Aucun contenu partagé</div>
         </div>
     </div>
 
-    <div class="controls">
-        <div id="profButtons" style="display:none; display:flex; gap:5px;">
-            <button class="btn" style="width:auto" onclick="document.getElementById('fileIn').click()">📁 Fichier</button>
-            <button class="btn" id="drawBtn" style="width:auto; background:#f59e0b" onclick="toggleDraw()">✏️ Dessiner</button>
-            <button class="btn" style="width:auto; background:#ef4444" onclick="clearAll()">🧹 Clear</button>
+    <aside class="sidebar">
+        <div class="chat-area" id="chat"></div>
+        <div style="padding: 10px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 5px;">
+            <input type="text" id="msgIn" placeholder="Chat..." style="flex:1">
+            <button class="btn" onclick="sendMsg()">OK</button>
         </div>
-        <button class="btn" style="width:auto; background:#6b7280" onclick="raiseHand()">🖐️ Lever la main</button>
-        <input type="file" id="fileIn" hidden onchange="shareFile(this)">
-    </div>
+    </aside>
 </div>
 
-<div class="sidebar" id="sidebar">
-    <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1)">
-        <b>Discussion</b> <span class="badge" id="peerCount">0</span>
+<footer>
+    <button id="micBtn" class="btn" onclick="toggleMic()">🎤 Micro</button>
+    
+    <div id="profTools" class="hidden" style="display:flex; gap:8px;">
+        <button class="btn" onclick="document.getElementById('fileIn').click()">📁 Fichier</button>
+        <input type="text" id="webUrl" placeholder="Lien Web (URL)..." style="width: 150px;">
+        <button class="btn btn-accent" onclick="shareUrl()">🌐 Envoyer Lien</button>
+        <button id="removeBtn" class="btn btn-danger hidden" onclick="removeContent()">🗑️ Retirer</button>
     </div>
-    <div class="chat-area" id="chat"></div>
-    <div style="padding:10px; display:flex;">
-        <input type="text" id="msgIn" placeholder="Message..." style="margin:0; flex:1">
-        <button class="btn" style="width:auto; margin:0 0 0 5px;" onclick="sendMsg()">OK</button>
-    </div>
-</div>
+    
+    <input type="file" id="fileIn" hidden onchange="handleFile(this)">
+</footer>
+
+<audio id="remoteAudio" autoplay></audio>
 
 <script>
     let peer, myConn, connections = [];
-    let isProf = false;
-    let currentContent = null;
-    let drawing = false;
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
+    let isProf = false, currentData = null;
+    let localStream = null;
 
     // --- INITIALISATION ---
-    function initSession(host) {
+    function init(host) {
         isProf = host;
-        const room = document.getElementById('roomName').value;
-        const name = document.getElementById('userName').value || "Utilisateur";
+        const room = document.getElementById('roomName').value.trim().toUpperCase();
+        const user = document.getElementById('userName').value.trim() || "Anonyme";
         if(!room) return alert("Nom de salle requis");
 
         peer = host ? new Peer(room) : new Peer();
-        document.getElementById('status').innerText = "Connexion au réseau...";
 
         peer.on('open', (id) => {
-            if(host) {
-                startApp();
-            } else {
-                myConn = peer.connect(room, { metadata: { name: name } });
+            document.getElementById('roomLabel').innerText = "SALLE: " + room;
+            if(!host) {
+                myConn = peer.connect(room, { metadata: { name: user } });
                 setupConn(myConn);
             }
+            document.getElementById('setup').classList.add('hidden');
+            if(isProf) document.getElementById('profTools').classList.remove('hidden');
         });
 
         peer.on('connection', (conn) => {
             connections.push(conn);
+            updateUserCount();
             setupConn(conn);
-            updateCount();
-            // Innovation : Renvoi automatique du cours à l'élève qui arrive
-            if(currentContent) {
-                setTimeout(() => conn.send({ type: 'file', ...currentContent }), 1000);
-            }
+            // Renvoi automatique du cours actuel au nouvel arrivant
+            if(currentData) setTimeout(() => conn.send(currentData), 1000);
         });
 
-        peer.on('error', () => alert("Erreur : Salle déjà prise ou code erroné."));
+        peer.on('call', (call) => {
+            call.answer(null);
+            call.on('stream', (stream) => {
+                document.getElementById('remoteAudio').srcObject = stream;
+            });
+        });
+
+        peer.on('error', (err) => {
+            alert("Erreur de salle: Vérifiez si le nom n'est pas déjà pris.");
+            location.reload();
+        });
     }
 
     function setupConn(c) {
-        c.on('open', () => {
-            startApp();
-            addChat("Système", "Connecté !");
-        });
         c.on('data', (data) => {
-            if(data.type === 'file') renderFile(data.content, data.mime);
+            if(data.type === 'file') render(data.content, data.mime);
             if(data.type === 'chat') addChat(data.user, data.msg);
-            if(data.type === 'draw') remoteDraw(data);
-            if(data.type === 'clear') clearCanvas();
+            if(data.type === 'remove') render(null, null);
         });
+        c.on('close', () => updateUserCount());
     }
 
-    function startApp() {
-        document.getElementById('setup').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
-        if(isProf) document.getElementById('profButtons').style.display = 'flex';
-        resizeCanvas();
-    }
-
-    // --- PARTAGE DE FICHIER ---
-    function shareFile(input) {
+    // --- LOGIQUE MULTIMÉDIA ---
+    function handleFile(input) {
         const file = input.files[0];
         const reader = new FileReader();
         reader.onload = (e) => {
-            currentContent = { content: e.target.result, mime: file.type };
-            renderFile(currentContent.content, currentContent.mime);
-            broadcast({ type: 'file', ...currentContent });
+            currentData = { type: 'file', content: e.target.result, mime: file.type };
+            render(currentData.content, currentData.mime);
+            broadcast(currentData);
+            document.getElementById('removeBtn').classList.remove('hidden');
         };
         reader.readAsDataURL(file);
     }
 
-    function renderFile(data, mime) {
-        const container = document.getElementById('mediaContainer');
-        if(mime.includes('video')) container.innerHTML = `<video src="${data}" controls autoplay style="max-height:100%"></video>`;
-        else if(mime.includes('pdf')) container.innerHTML = `<iframe src="${data}" style="width:100%;height:100%"></iframe>`;
-        else container.innerHTML = `<img src="${data}" style="max-height:100%">`;
+    function shareUrl() {
+        const url = document.getElementById('webUrl').value.trim();
+        if(!url) return;
+        currentData = { type: 'file', content: url, mime: 'url/web' };
+        render(currentData.content, currentData.mime);
+        broadcast(currentData);
+        document.getElementById('removeBtn').classList.remove('hidden');
     }
 
-    // --- TABLEAU BLANC (INNOVATION) ---
-    function toggleDraw() {
-        drawing = !drawing;
-        canvas.classList.toggle('active', drawing);
-        document.getElementById('drawBtn').style.background = drawing ? "#ef4444" : "#f59e0b";
+    function removeContent() {
+        currentData = null;
+        render(null, null);
+        broadcast({ type: 'remove' });
+        document.getElementById('removeBtn').classList.add('hidden');
     }
 
-    function resizeCanvas() {
-        canvas.width = document.getElementById('viewer').clientWidth;
-        canvas.height = document.getElementById('viewer').clientHeight;
+    function render(data, mime) {
+        const zone = document.getElementById('mediaContainer');
+        if(!data) {
+            zone.innerHTML = `<div style="margin-top: 100px; opacity: 0.2;">Aucun contenu partagé</div>`;
+            return;
+        }
+        if(mime === 'url/web' || mime.includes('pdf')) {
+            zone.innerHTML = `<iframe src="${data}" allow="autoplay; fullscreen"></iframe>`;
+        } else if(mime.includes('video')) {
+            zone.innerHTML = `<video src="${data}" controls autoplay></video>`;
+        } else {
+            zone.innerHTML = `<img src="${data}">`;
+        }
     }
 
-    canvas.onmousedown = (e) => { if(!drawing) return; canvas.isDrawing = true; };
-    canvas.onmousemove = (e) => {
-        if(!canvas.isDrawing) return;
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        drawDot(x, y);
-        broadcast({ type: 'draw', x: x / canvas.width, y: y / canvas.height });
-    };
-    window.onmouseup = () => canvas.isDrawing = false;
-
-    function drawDot(x, y) {
-        ctx.fillStyle = "red";
-        ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+    // --- AUDIO ---
+    async function toggleMic() {
+        const btn = document.getElementById('micBtn');
+        if(!localStream) {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                btn.classList.add('mic-active');
+                btn.innerText = "🎤 Micro ON";
+                const room = document.getElementById('roomName').value.trim().toUpperCase();
+                if(isProf) connections.forEach(c => peer.call(c.peer, localStream));
+                else peer.call(room, localStream);
+            } catch(e) { alert("Micro inaccessible."); }
+        } else {
+            localStream.getTracks().forEach(t => t.stop());
+            localStream = null;
+            btn.classList.remove('mic-active');
+            btn.innerText = "🎤 Micro";
+        }
     }
 
-    function remoteDraw(data) {
-        drawDot(data.x * canvas.width, data.y * canvas.height);
-    }
-
-    function clearAll() { clearCanvas(); broadcast({ type: 'clear' }); }
-    function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
-
-    // --- CHAT ET ZOOM FUNCTIONS ---
+    // --- CHAT & SYNC ---
     function sendMsg() {
         const msg = document.getElementById('msgIn').value;
-        const name = document.getElementById('userName').value || (isProf ? "PROF" : "ÉLÈVE");
+        const name = document.getElementById('userName').value || "User";
         if(!msg) return;
-        addChat("Moi", msg);
         broadcast({ type: 'chat', user: name, msg: msg });
+        addChat("Moi", msg);
         document.getElementById('msgIn').value = "";
-    }
-
-    function raiseHand() {
-        const name = document.getElementById('userName').value || "Élève";
-        broadcast({ type: 'chat', user: "SYSTÈME", msg: `🖐️ ${name} lève la main !` });
-        addChat("Système", "Vous avez levé la main.");
     }
 
     function addChat(user, msg) {
         const chat = document.getElementById('chat');
-        chat.innerHTML += `<div><b style="color:var(--primary)">${user}:</b> ${msg}</div>`;
+        chat.innerHTML += `<div class="chat-msg"><b>${user}:</b> ${msg}</div>`;
         chat.scrollTop = chat.scrollHeight;
     }
 
@@ -218,8 +261,8 @@
         else if(myConn) myConn.send(data);
     }
 
-    function updateCount() {
-        document.getElementById('peerCount').innerText = connections.length;
+    function updateUserCount() {
+        document.getElementById('userCount').innerText = "Participants: " + (isProf ? connections.length : "Connecté");
     }
 </script>
 </body>

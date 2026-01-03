@@ -2,137 +2,172 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Projo-Direct (Sans Serveur)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Projo-Connect Ultra</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #00d2ff; --secondary: #3a7bd5; --dark: #121212; }
-        body { margin: 0; font-family: 'Poppins', sans-serif; background: var(--dark); color: white; display: flex; flex-direction: column; height: 100vh; }
+        :root { --primary: #6366f1; --bg: #0f172a; --glass: rgba(255,255,255,0.05); }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; margin: 10px; text-align: center; }
-        .btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: white; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; }
-        input { background: rgba(255,255,255,0.1); border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; width: calc(100% - 24px); margin-bottom: 10px; }
+        .setup-screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); z-index: 100; padding: 20px; }
+        .card { background: var(--glass); backdrop-filter: blur(15px); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 350px; text-align: center; }
         
-        #app { display: none; flex: 1; flex-direction: column; padding: 15px; }
-        .screen { flex: 1; background: #000; border-radius: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #333; }
+        .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin: 10px 0; touch-action: manipulation; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); opacity: 0.8; }
+        .btn:disabled { background: #444; cursor: not-allowed; }
+        
+        input { background: rgba(0,0,0,0.2); border: 1px solid #333; color: white; padding: 12px; border-radius: 10px; width: calc(100% - 26px); margin-bottom: 10px; font-size: 16px; }
+        
+        .main-ui { display: none; flex: 1; flex-direction: column; height: 100%; }
+        .viewer { flex: 1; background: #000; position: relative; display: flex; align-items: center; justify-content: center; }
         video, img, iframe { width: 100%; height: 100%; object-fit: contain; border: none; }
         
-        .controls { display: flex; gap: 10px; margin-top: 15px; }
-        .hidden { display: none; }
-        .status { font-size: 0.8rem; color: #888; margin-bottom: 5px; }
+        .chat-overlay { height: 150px; background: rgba(0,0,0,0.5); overflow-y: auto; padding: 10px; font-size: 0.8rem; border-top: 1px solid #333; }
+        .controls-bar { padding: 15px; background: #1e293b; display: flex; gap: 10px; }
     </style>
 </head>
 <body>
 
-<div id="login" style="margin: auto; width: 320px;">
-    <div class="glass">
-        <h2 style="margin-top:0">🚀 Projo-Direct</h2>
-        <p style="font-size: 0.8rem; opacity: 0.7;">Solution 100% GitHub sans serveur</p>
+<div id="setup" class="setup-screen">
+    <div class="card">
+        <h2>📽️ Projo-Connect</h2>
+        <p id="status-text" style="color: #6366f1; font-size: 0.8rem;">Initialisation du réseau...</p>
         
-        <button class="btn" onclick="startHost()">➕ Créer une Salle (Prof)</button>
-        <div style="margin: 20px 0; opacity: 0.3;">— OU —</div>
-        <input type="text" id="peerIdInput" placeholder="Code du Prof">
-        <button class="btn" style="background: #22c55e;" onclick="joinRoom()">🔗 Rejoindre le Cours</button>
+        <button id="hostBtn" class="btn" onclick="startHost()" disabled>➕ Créer une Salle</button>
+        <div style="margin: 10px; opacity: 0.3;">OU</div>
+        <input type="text" id="joinId" placeholder="Code du Prof">
+        <button id="joinBtn" class="btn" style="background: #10b981;" onclick="joinRoom()" disabled>🔗 Rejoindre</button>
     </div>
 </div>
 
-<div id="app">
-    <div class="status">
-        <span id="roleBadge">Rôle: Élève</span> | 
-        <span id="myIdDisplay">Mon Code: ...</span>
+<div id="main" class="main-ui">
+    <div style="padding: 10px; background: #1e293b; display: flex; justify-content: space-between; font-size: 0.7rem;">
+        <span id="roleTitle">Élève</span>
+        <span id="codeDisplay" style="font-weight: bold; color: #6366f1;">CODE: ----</span>
     </div>
 
-    <div class="screen" id="displayArea">
-        <p id="msg">En attente du contenu...</p>
+    <div class="viewer" id="view">
+        <p id="wait">En attente de contenu...</p>
     </div>
 
-    <div id="profTools" class="hidden">
-        <input type="file" id="fileInput" hidden onchange="handleFile(this)">
-        <button class="btn" onclick="document.getElementById('fileInput').click()">📁 Partager un document / Vidéo</button>
+    <div class="chat-overlay" id="chat">
+        <div><b>Système:</b> Bienvenue dans la session.</div>
     </div>
 
-    <div class="controls">
-        <button class="btn" style="background: #444;" onclick="location.reload()">Quitter</button>
+    <div class="controls-bar">
+        <div id="profOnly" class="hidden" style="flex:1">
+            <input type="file" id="fileIn" hidden onchange="sendFile(this)">
+            <button class="btn" onclick="document.getElementById('fileIn').click()" style="margin:0">📁 Envoyer</button>
+        </div>
+        <input type="text" id="msgIn" placeholder="Message..." style="flex:2; margin:0">
+        <button class="btn" onclick="sendMsg()" style="flex:0.5; margin:0">ok</button>
     </div>
 </div>
 
 <script>
-    let peer = null;
-    let conn = null; // Connexion active
-    let connections = []; // Pour le prof : liste des élèves
+    let peer = new Peer();
+    let myConn = null;
+    let studentConns = [];
+    let isProf = false;
 
-    // --- INITIALISATION ---
-    function initPeer(id = null) {
-        peer = id ? new Peer(id) : new Peer();
-        
-        peer.on('open', (myId) => {
-            document.getElementById('myIdDisplay').innerText = "Code: " + myId;
-            if (id) setupApp(true); // Si on a forcé un ID, on est prof
-        });
+    // --- DETECTION RESEAU ---
+    peer.on('open', (id) => {
+        document.getElementById('status-text').innerText = "✅ Réseau prêt";
+        document.getElementById('hostBtn').disabled = false;
+        document.getElementById('joinBtn').disabled = false;
+    });
 
-        // Le prof reçoit des connexions d'élèves
-        peer.on('connection', (c) => {
-            connections.push(c);
-            setupConnection(c);
-        });
-    }
+    peer.on('error', (err) => {
+        alert("Erreur de connexion : " + err.type);
+        location.reload();
+    });
 
-    // --- ACTIONS ---
+    // --- LOGIQUE PROF ---
     function startHost() {
-        const randomCode = Math.floor(1000 + Math.random() * 9000).toString();
-        initPeer(randomCode);
-        document.getElementById('roleBadge').innerText = "Rôle: Professeur";
-        document.getElementById('profTools').classList.remove('hidden');
-        setupApp();
-    }
-
-    function joinRoom() {
-        const hostId = document.getElementById('peerIdInput').value;
-        if (!hostId) return alert("Entrez le code du prof");
+        isProf = true;
+        const profCode = Math.floor(1000 + Math.random() * 9000).toString();
         
-        initPeer();
-        peer.on('open', () => {
-            conn = peer.connect(hostId);
-            setupConnection(conn);
-            setupApp();
+        // On recrée un peer avec le code simple
+        peer.destroy();
+        peer = new Peer(profCode);
+        
+        peer.on('open', (id) => {
+            document.getElementById('codeDisplay').innerText = "CODE: " + id;
+            document.getElementById('roleTitle').innerText = "PROFESSEUR";
+            document.getElementById('profOnly').style.display = 'block';
+            showUI();
+        });
+
+        peer.on('connection', (conn) => {
+            studentConns.push(conn);
+            setupChat(conn);
+            addLog("Un élève a rejoint !");
         });
     }
 
-    function setupApp() {
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
+    // --- LOGIQUE ELEVE ---
+    function joinRoom() {
+        const code = document.getElementById('joinId').value;
+        if(!code) return alert("Code manquant");
+
+        myConn = peer.connect(code);
+        myConn.on('open', () => {
+            document.getElementById('codeDisplay').innerText = "Connecté au prof";
+            setupChat(myConn);
+            showUI();
+        });
     }
 
-    function setupConnection(c) {
+    function showUI() {
+        document.getElementById('setup').style.display = 'none';
+        document.getElementById('main').style.display = 'flex';
+    }
+
+    // --- ECHANGES DATA ---
+    function setupChat(c) {
         c.on('data', (data) => {
-            if (data.type === 'file') {
-                renderContent(data.content, data.fileType);
-            }
+            if(data.type === 'chat') addLog(data.user + ": " + data.msg);
+            if(data.type === 'file') renderFile(data.content, data.mime);
         });
     }
 
-    // --- GESTION DES FICHIERS ---
-    function handleFile(input) {
+    function sendMsg() {
+        const m = document.getElementById('msgIn').value;
+        if(!m) return;
+        const packet = { type: 'chat', user: isProf ? "PROF" : "ÉLÈVE", msg: m };
+        
+        if(isProf) {
+            studentConns.forEach(c => c.send(packet));
+        } else {
+            myConn.send(packet);
+        }
+        addLog("Moi: " + m);
+        document.getElementById('msgIn').value = "";
+    }
+
+    function sendFile(input) {
         const file = input.files[0];
         const reader = new FileReader();
         reader.onload = (e) => {
-            const content = e.target.result;
-            renderContent(content, file.type);
-            
-            // Envoyer à tous les élèves connectés
-            connections.forEach(c => {
-                c.send({ type: 'file', content: content, fileType: file.type });
-            });
+            const packet = { type: 'file', content: e.target.result, mime: file.type };
+            studentConns.forEach(c => c.send(packet));
+            renderFile(e.target.result, file.type);
         };
         reader.readAsDataURL(file);
     }
 
-    function renderContent(content, type) {
-        const area = document.getElementById('displayArea');
-        if (type.includes('video')) area.innerHTML = `<video src="${content}" controls autoplay></video>`;
-        else if (type.includes('pdf')) area.innerHTML = `<iframe src="${content}"></iframe>`;
-        else area.innerHTML = `<img src="${content}">`;
+    function renderFile(data, mime) {
+        const v = document.getElementById('view');
+        if(mime.includes('video')) v.innerHTML = `<video src="${data}" controls autoplay></video>`;
+        else if(mime.includes('pdf')) v.innerHTML = `<iframe src="${data}"></iframe>`;
+        else v.innerHTML = `<img src="${data}">`;
+    }
+
+    function addLog(t) {
+        const c = document.getElementById('chat');
+        c.innerHTML += `<div>${t}</div>`;
+        c.scrollTop = c.scrollHeight;
     }
 </script>
 </body>

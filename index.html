@@ -3,92 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Projo-Connect Ultimate v4</title>
+    <title>Projo-Connect | Code System</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #6366f1; --bg: #0f172a; --panel: #1e293b; --accent: #10b981; --danger: #ef4444; }
-        
-        body { 
-            margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; 
-            height: 100vh; display: flex; flex-direction: column; overflow: hidden; 
-        }
-
-        /* HEADER */
-        header { 
-            height: 50px; background: var(--panel); display: flex; align-items: center; 
-            padding: 0 20px; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        /* LAYOUT */
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        header { height: 50px; background: var(--panel); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .container { display: flex; flex: 1; overflow: hidden; }
-
-        /* ZONE DE PROJECTION (SCROLLABLE) */
-        .viewport { 
-            flex: 1; position: relative; background: #000; overflow-y: auto; 
-            display: flex; flex-direction: column; align-items: center;
-        }
-        
+        .viewport { flex: 1; position: relative; background: #000; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
         #mediaContainer { width: 100%; padding: 20px 0; display: flex; flex-direction: column; align-items: center; }
-        #mediaContainer iframe, #mediaContainer video, #mediaContainer img { 
-            max-width: 95%; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-            background: #fff;
-        }
-        #mediaContainer iframe { width: 90vw; height: 80vh; border: none; }
-        #mediaContainer video { width: 90%; }
-
-        /* SIDEBAR CHAT */
-        .sidebar { 
-            width: 300px; background: var(--panel); border-left: 1px solid rgba(255,255,255,0.1);
-            display: flex; flex-direction: column; 
-        }
+        #mediaContainer iframe, #mediaContainer video, #mediaContainer img { max-width: 95%; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        #mediaContainer iframe { width: 90vw; height: 80vh; border: none; background: white; }
+        .sidebar { width: 300px; background: var(--panel); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
         .chat-area { flex: 1; overflow-y: auto; padding: 15px; font-size: 0.85rem; }
-        .chat-msg { margin-bottom: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; word-break: break-word; }
-
-        /* FOOTER CONTROLS */
-        footer { 
-            background: var(--panel); padding: 10px 15px; border-top: 1px solid rgba(255,255,255,0.1);
-            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-        }
-
-        .btn { 
-            background: var(--primary); color: white; border: none; padding: 8px 12px; 
-            border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem;
-            display: flex; align-items: center; gap: 5px;
-        }
+        .chat-msg { margin-bottom: 8px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; }
+        footer { background: var(--panel); padding: 10px 15px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 8px; align-items: center; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8rem; transition: 0.2s; }
         .btn-accent { background: var(--accent); }
         .btn-danger { background: var(--danger); }
-        .mic-active { animation: pulse 1.5s infinite; background: var(--accent) !important; }
-
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
-
-        input[type="text"] { 
-            background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; 
-            padding: 8px; border-radius: 6px; outline: none;
-        }
-
-        /* OVERLAY CONNEXION */
+        input { background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; padding: 12px; border-radius: 8px; outline: none; margin-bottom: 10px; font-size: 1rem; }
         .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
-        .card { background: var(--panel); padding: 30px; border-radius: 20px; width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .card { background: var(--panel); padding: 30px; border-radius: 24px; width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
         .hidden { display: none !important; }
+        .code-display { font-size: 2rem; font-weight: 800; color: var(--primary); letter-spacing: 5px; margin: 10px 0; }
     </style>
 </head>
 <body>
 
 <div id="setup" class="overlay">
     <div class="card">
-        <h2 style="margin-top:0">🚀 Projo-Connect</h2>
-        <input type="text" id="userName" placeholder="Ton Nom" style="width: 100%; margin-bottom: 10px;">
-        <input type="text" id="roomName" placeholder="Nom de la salle" style="width: 100%; margin-bottom: 15px;">
-        <button class="btn" style="width:100%; margin-bottom:8px;" onclick="init(true)">➕ Créer Salle (Prof)</button>
-        <button class="btn btn-accent" style="width:100%;" onclick="init(false)">🔗 Rejoindre Salle</button>
-        <p id="netStatus" style="font-size: 0.7rem; color: var(--primary); margin-top: 15px;">Connexion au réseau...</p>
+        <h2 style="margin:0 0 20px 0">📽️ Projo-Connect</h2>
+        
+        <div id="role-selection">
+            <input type="text" id="userName" placeholder="Ton Nom" style="width: 100%;">
+            <button class="btn" style="width:100%;" onclick="startAsProf()">➕ Créer une Salle (Prof)</button>
+            <div style="margin: 15px 0; opacity: 0.3;">OU</div>
+            <input type="text" id="inputCode" placeholder="Code à 4 chiffres" style="width: 100%; text-align: center; font-weight: bold;">
+            <button class="btn btn-accent" style="width:100%;" onclick="startAsStudent()">🔗 Rejoindre</button>
+        </div>
+
+        <div id="loading" class="hidden">
+            <p>Connexion au réseau...</p>
+            <div class="code-display" id="generatedCode">----</div>
+            <p style="font-size: 0.8rem; opacity: 0.6;">Donnez ce code aux élèves</p>
+        </div>
     </div>
 </div>
 
 <header>
-    <div><b id="roomLabel">SALLE: ---</b></div>
-    <div id="userCount" style="font-size: 0.8rem; opacity: 0.6;">Participants: 0</div>
+    <div><b id="roomLabel">CODE: ----</b></div>
+    <div id="userCount" style="font-size: 0.8rem; opacity: 0.6;">Connecté en tant que: ...</div>
 </header>
 
 <div class="container">
@@ -97,26 +62,23 @@
             <div style="margin-top: 100px; opacity: 0.2;">Aucun contenu partagé</div>
         </div>
     </div>
-
     <aside class="sidebar">
         <div class="chat-area" id="chat"></div>
         <div style="padding: 10px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 5px;">
-            <input type="text" id="msgIn" placeholder="Chat..." style="flex:1">
-            <button class="btn" onclick="sendMsg()">OK</button>
+            <input type="text" id="msgIn" placeholder="Chat..." style="flex:1; margin:0">
+            <button class="btn" onclick="sendMsg()" style="padding: 10px;">OK</button>
         </div>
     </aside>
 </div>
 
 <footer>
     <button id="micBtn" class="btn" onclick="toggleMic()">🎤 Micro</button>
-    
     <div id="profTools" class="hidden" style="display:flex; gap:8px;">
         <button class="btn" onclick="document.getElementById('fileIn').click()">📁 Fichier</button>
-        <input type="text" id="webUrl" placeholder="Lien Web (URL)..." style="width: 150px;">
-        <button class="btn btn-accent" onclick="shareUrl()">🌐 Envoyer Lien</button>
-        <button id="removeBtn" class="btn btn-danger hidden" onclick="removeContent()">🗑️ Retirer</button>
+        <input type="text" id="webUrl" placeholder="URL du site..." style="width: 140px; margin:0">
+        <button class="btn btn-accent" onclick="shareUrl()">🌐 Envoyer</button>
+        <button id="removeBtn" class="btn btn-danger hidden" onclick="removeContent()">🗑️</button>
     </div>
-    
     <input type="file" id="fileIn" hidden onchange="handleFile(this)">
 </footer>
 
@@ -124,46 +86,74 @@
 
 <script>
     let peer, myConn, connections = [];
-    let isProf = false, currentData = null;
-    let localStream = null;
+    let isProf = false, currentData = null, localStream = null;
+    let myId = "";
 
-    // --- INITIALISATION ---
-    function init(host) {
-        isProf = host;
-        const room = document.getElementById('roomName').value.trim().toUpperCase();
-        const user = document.getElementById('userName').value.trim() || "Anonyme";
-        if(!room) return alert("Nom de salle requis");
+    // --- INITIALISATION PROF ---
+    function startAsProf() {
+        isProf = true;
+        const name = document.getElementById('userName').value.trim() || "Professeur";
+        const code = Math.floor(1000 + Math.random() * 9000).toString(); // Génère 4 chiffres
+        
+        document.getElementById('role-selection').classList.add('hidden');
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('generatedCode').innerText = code;
 
-        peer = host ? new Peer(room) : new Peer();
+        peer = new Peer("ROOM-" + code);
 
         peer.on('open', (id) => {
-            document.getElementById('roomLabel').innerText = "SALLE: " + room;
-            if(!host) {
-                myConn = peer.connect(room, { metadata: { name: user } });
-                setupConn(myConn);
-            }
-            document.getElementById('setup').classList.add('hidden');
-            if(isProf) document.getElementById('profTools').classList.remove('hidden');
+            myId = code;
+            document.getElementById('roomLabel').innerText = "CODE: " + code;
+            document.getElementById('userCount').innerText = "Connecté: " + name;
+            setTimeout(() => {
+                document.getElementById('setup').classList.add('hidden');
+                document.getElementById('profTools').classList.remove('hidden');
+            }, 2000);
         });
 
         peer.on('connection', (conn) => {
             connections.push(conn);
-            updateUserCount();
             setupConn(conn);
-            // Renvoi automatique du cours actuel au nouvel arrivant
             if(currentData) setTimeout(() => conn.send(currentData), 1000);
         });
 
-        peer.on('call', (call) => {
-            call.answer(null);
-            call.on('stream', (stream) => {
-                document.getElementById('remoteAudio').srcObject = stream;
+        peer.on('error', (err) => {
+            if(err.type === 'unavailable-id') startAsProf(); // Si code déjà pris, on relance
+        });
+
+        setupAudioCall();
+    }
+
+    // --- INITIALISATION ELEVE ---
+    function startAsStudent() {
+        isProf = false;
+        const name = document.getElementById('userName').value.trim() || "Élève";
+        const code = document.getElementById('inputCode').value.trim();
+        
+        if(code.length < 4) return alert("Entrez le code à 4 chiffres du prof");
+
+        peer = new Peer();
+
+        peer.on('open', (id) => {
+            myConn = peer.connect("ROOM-" + code, { metadata: { name: name } });
+            setupConn(myConn);
+            
+            myConn.on('open', () => {
+                document.getElementById('roomLabel').innerText = "CODE: " + code;
+                document.getElementById('userCount').innerText = "Connecté: " + name;
+                document.getElementById('setup').classList.add('hidden');
+                addChat("Système", "Bienvenue dans le cours !");
             });
         });
 
-        peer.on('error', (err) => {
-            alert("Erreur de salle: Vérifiez si le nom n'est pas déjà pris.");
-            location.reload();
+        peer.on('error', () => alert("Code invalide ou prof hors-ligne."));
+        setupAudioCall();
+    }
+
+    function setupAudioCall() {
+        peer.on('call', (call) => {
+            call.answer(null);
+            call.on('stream', (stream) => { document.getElementById('remoteAudio').srcObject = stream; });
         });
     }
 
@@ -173,10 +163,9 @@
             if(data.type === 'chat') addChat(data.user, data.msg);
             if(data.type === 'remove') render(null, null);
         });
-        c.on('close', () => updateUserCount());
     }
 
-    // --- LOGIQUE MULTIMÉDIA ---
+    // --- MEDIA ---
     function handleFile(input) {
         const file = input.files[0];
         const reader = new FileReader();
@@ -207,43 +196,37 @@
 
     function render(data, mime) {
         const zone = document.getElementById('mediaContainer');
-        if(!data) {
-            zone.innerHTML = `<div style="margin-top: 100px; opacity: 0.2;">Aucun contenu partagé</div>`;
-            return;
-        }
+        if(!data) { zone.innerHTML = `<div style="margin-top:100px;opacity:0.2;">Fin de présentation</div>`; return; }
         if(mime === 'url/web' || mime.includes('pdf')) {
             zone.innerHTML = `<iframe src="${data}" allow="autoplay; fullscreen"></iframe>`;
         } else if(mime.includes('video')) {
-            zone.innerHTML = `<video src="${data}" controls autoplay></video>`;
+            zone.innerHTML = `<video src="${data}" controls autoplay style="width:90%"></video>`;
         } else {
-            zone.innerHTML = `<img src="${data}">`;
+            zone.innerHTML = `<img src="${data}" style="max-width:90%">`;
         }
     }
 
-    // --- AUDIO ---
+    // --- AUDIO & CHAT ---
     async function toggleMic() {
         const btn = document.getElementById('micBtn');
         if(!localStream) {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                btn.classList.add('mic-active');
-                btn.innerText = "🎤 Micro ON";
-                const room = document.getElementById('roomName').value.trim().toUpperCase();
+                btn.classList.add('btn-accent');
+                const code = isProf ? myId : document.getElementById('inputCode').value;
                 if(isProf) connections.forEach(c => peer.call(c.peer, localStream));
-                else peer.call(room, localStream);
+                else peer.call("ROOM-" + code, localStream);
             } catch(e) { alert("Micro inaccessible."); }
         } else {
             localStream.getTracks().forEach(t => t.stop());
             localStream = null;
-            btn.classList.remove('mic-active');
-            btn.innerText = "🎤 Micro";
+            btn.classList.remove('btn-accent');
         }
     }
 
-    // --- CHAT & SYNC ---
     function sendMsg() {
         const msg = document.getElementById('msgIn').value;
-        const name = document.getElementById('userName').value || "User";
+        const name = document.getElementById('userName').value || "Utilisateur";
         if(!msg) return;
         broadcast({ type: 'chat', user: name, msg: msg });
         addChat("Moi", msg);
@@ -259,10 +242,6 @@
     function broadcast(data) {
         if(isProf) connections.forEach(c => c.send(data));
         else if(myConn) myConn.send(data);
-    }
-
-    function updateUserCount() {
-        document.getElementById('userCount').innerText = "Participants: " + (isProf ? connections.length : "Connecté");
     }
 </script>
 </body>

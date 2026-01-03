@@ -3,171 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Projo-Connect Ultra</title>
+    <title>Projo-Connect Innov'</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #6366f1; --bg: #0f172a; --glass: rgba(255,255,255,0.05); }
-        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        :root { --primary: #6366f1; --bg: #0f172a; --panel: #1e293b; --accent: #10b981; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; overflow: hidden; }
         
-        .setup-screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); z-index: 100; padding: 20px; }
-        .card { background: var(--glass); backdrop-filter: blur(15px); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 350px; text-align: center; }
+        /* Ecran d'accueil */
+        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+        .card { background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); width: 320px; text-align: center; }
         
-        .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; margin: 10px 0; touch-action: manipulation; transition: 0.2s; }
-        .btn:active { transform: scale(0.95); opacity: 0.8; }
-        .btn:disabled { background: #444; cursor: not-allowed; }
+        /* Layout Principal */
+        .main { flex: 1; display: none; flex-direction: column; }
+        .sidebar { width: 280px; background: var(--panel); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
         
-        input { background: rgba(0,0,0,0.2); border: 1px solid #333; color: white; padding: 12px; border-radius: 10px; width: calc(100% - 26px); margin-bottom: 10px; font-size: 16px; }
+        /* Zone de contenu */
+        .content { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; }
+        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; }
+        #canvas.active { pointer-events: auto; cursor: crosshair; }
         
-        .main-ui { display: none; flex: 1; flex-direction: column; height: 100%; }
-        .viewer { flex: 1; background: #000; position: relative; display: flex; align-items: center; justify-content: center; }
-        video, img, iframe { width: 100%; height: 100%; object-fit: contain; border: none; }
+        /* UI Elements */
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; margin: 5px 0; }
+        .btn-accent { background: var(--accent); }
+        input { background: rgba(0,0,0,0.2); border: 1px solid #333; color: white; padding: 12px; border-radius: 10px; width: calc(100% - 26px); margin: 5px 0; }
         
-        .chat-overlay { height: 150px; background: rgba(0,0,0,0.5); overflow-y: auto; padding: 10px; font-size: 0.8rem; border-top: 1px solid #333; }
-        .controls-bar { padding: 15px; background: #1e293b; display: flex; gap: 10px; }
+        .chat-area { flex: 1; overflow-y: auto; padding: 15px; font-size: 0.85rem; }
+        .controls { padding: 10px; background: var(--panel); display: flex; gap: 5px; flex-wrap: wrap; }
+        .badge { background: var(--primary); padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; }
     </style>
 </head>
 <body>
 
-<div id="setup" class="setup-screen">
+<div id="setup" class="overlay">
     <div class="card">
-        <h2>📽️ Projo-Connect</h2>
-        <p id="status-text" style="color: #6366f1; font-size: 0.8rem;">Initialisation du réseau...</p>
-        
-        <button id="hostBtn" class="btn" onclick="startHost()" disabled>➕ Créer une Salle</button>
-        <div style="margin: 10px; opacity: 0.3;">OU</div>
-        <input type="text" id="joinId" placeholder="Code du Prof">
-        <button id="joinBtn" class="btn" style="background: #10b981;" onclick="joinRoom()" disabled>🔗 Rejoindre</button>
+        <h2>🚀 Projo-Connect</h2>
+        <input type="text" id="userName" placeholder="Ton nom">
+        <hr style="opacity:0.1; margin: 15px 0;">
+        <input type="text" id="roomName" placeholder="Nom de la salle">
+        <button class="btn" onclick="initSession(true)">➕ Créer la salle</button>
+        <button class="btn btn-accent" onclick="initSession(false)">🔗 Rejoindre</button>
+        <p id="status" style="font-size: 0.7rem; color: var(--primary); margin-top: 10px;">En attente...</p>
     </div>
 </div>
 
-<div id="main" class="main-ui">
-    <div style="padding: 10px; background: #1e293b; display: flex; justify-content: space-between; font-size: 0.7rem;">
-        <span id="roleTitle">Élève</span>
-        <span id="codeDisplay" style="font-weight: bold; color: #6366f1;">CODE: ----</span>
-    </div>
-
-    <div class="viewer" id="view">
-        <p id="wait">En attente de contenu...</p>
-    </div>
-
-    <div class="chat-overlay" id="chat">
-        <div><b>Système:</b> Bienvenue dans la session.</div>
-    </div>
-
-    <div class="controls-bar">
-        <div id="profOnly" class="hidden" style="flex:1">
-            <input type="file" id="fileIn" hidden onchange="sendFile(this)">
-            <button class="btn" onclick="document.getElementById('fileIn').click()" style="margin:0">📁 Envoyer</button>
+<div id="app" class="main">
+    <div class="content" id="viewer">
+        <canvas id="canvas"></canvas>
+        <div id="mediaContainer" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+            <p>En attente du professeur...</p>
         </div>
-        <input type="text" id="msgIn" placeholder="Message..." style="flex:2; margin:0">
-        <button class="btn" onclick="sendMsg()" style="flex:0.5; margin:0">ok</button>
+    </div>
+
+    <div class="controls">
+        <div id="profButtons" style="display:none; display:flex; gap:5px;">
+            <button class="btn" style="width:auto" onclick="document.getElementById('fileIn').click()">📁 Fichier</button>
+            <button class="btn" id="drawBtn" style="width:auto; background:#f59e0b" onclick="toggleDraw()">✏️ Dessiner</button>
+            <button class="btn" style="width:auto; background:#ef4444" onclick="clearAll()">🧹 Clear</button>
+        </div>
+        <button class="btn" style="width:auto; background:#6b7280" onclick="raiseHand()">🖐️ Lever la main</button>
+        <input type="file" id="fileIn" hidden onchange="shareFile(this)">
+    </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div style="padding:15px; border-bottom:1px solid rgba(255,255,255,0.1)">
+        <b>Discussion</b> <span class="badge" id="peerCount">0</span>
+    </div>
+    <div class="chat-area" id="chat"></div>
+    <div style="padding:10px; display:flex;">
+        <input type="text" id="msgIn" placeholder="Message..." style="margin:0; flex:1">
+        <button class="btn" style="width:auto; margin:0 0 0 5px;" onclick="sendMsg()">OK</button>
     </div>
 </div>
 
 <script>
-    let peer = new Peer();
-    let myConn = null;
-    let studentConns = [];
+    let peer, myConn, connections = [];
     let isProf = false;
+    let currentContent = null;
+    let drawing = false;
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
 
-    // --- DETECTION RESEAU ---
-    peer.on('open', (id) => {
-        document.getElementById('status-text').innerText = "✅ Réseau prêt";
-        document.getElementById('hostBtn').disabled = false;
-        document.getElementById('joinBtn').disabled = false;
-    });
+    // --- INITIALISATION ---
+    function initSession(host) {
+        isProf = host;
+        const room = document.getElementById('roomName').value;
+        const name = document.getElementById('userName').value || "Utilisateur";
+        if(!room) return alert("Nom de salle requis");
 
-    peer.on('error', (err) => {
-        alert("Erreur de connexion : " + err.type);
-        location.reload();
-    });
+        peer = host ? new Peer(room) : new Peer();
+        document.getElementById('status').innerText = "Connexion au réseau...";
 
-    // --- LOGIQUE PROF ---
-    function startHost() {
-        isProf = true;
-        const profCode = Math.floor(1000 + Math.random() * 9000).toString();
-        
-        // On recrée un peer avec le code simple
-        peer.destroy();
-        peer = new Peer(profCode);
-        
         peer.on('open', (id) => {
-            document.getElementById('codeDisplay').innerText = "CODE: " + id;
-            document.getElementById('roleTitle').innerText = "PROFESSEUR";
-            document.getElementById('profOnly').style.display = 'block';
-            showUI();
+            if(host) {
+                startApp();
+            } else {
+                myConn = peer.connect(room, { metadata: { name: name } });
+                setupConn(myConn);
+            }
         });
 
         peer.on('connection', (conn) => {
-            studentConns.push(conn);
-            setupChat(conn);
-            addLog("Un élève a rejoint !");
+            connections.push(conn);
+            setupConn(conn);
+            updateCount();
+            // Innovation : Renvoi automatique du cours à l'élève qui arrive
+            if(currentContent) {
+                setTimeout(() => conn.send({ type: 'file', ...currentContent }), 1000);
+            }
         });
+
+        peer.on('error', () => alert("Erreur : Salle déjà prise ou code erroné."));
     }
 
-    // --- LOGIQUE ELEVE ---
-    function joinRoom() {
-        const code = document.getElementById('joinId').value;
-        if(!code) return alert("Code manquant");
-
-        myConn = peer.connect(code);
-        myConn.on('open', () => {
-            document.getElementById('codeDisplay').innerText = "Connecté au prof";
-            setupChat(myConn);
-            showUI();
+    function setupConn(c) {
+        c.on('open', () => {
+            startApp();
+            addChat("Système", "Connecté !");
         });
-    }
-
-    function showUI() {
-        document.getElementById('setup').style.display = 'none';
-        document.getElementById('main').style.display = 'flex';
-    }
-
-    // --- ECHANGES DATA ---
-    function setupChat(c) {
         c.on('data', (data) => {
-            if(data.type === 'chat') addLog(data.user + ": " + data.msg);
             if(data.type === 'file') renderFile(data.content, data.mime);
+            if(data.type === 'chat') addChat(data.user, data.msg);
+            if(data.type === 'draw') remoteDraw(data);
+            if(data.type === 'clear') clearCanvas();
         });
     }
 
-    function sendMsg() {
-        const m = document.getElementById('msgIn').value;
-        if(!m) return;
-        const packet = { type: 'chat', user: isProf ? "PROF" : "ÉLÈVE", msg: m };
-        
-        if(isProf) {
-            studentConns.forEach(c => c.send(packet));
-        } else {
-            myConn.send(packet);
-        }
-        addLog("Moi: " + m);
-        document.getElementById('msgIn').value = "";
+    function startApp() {
+        document.getElementById('setup').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        if(isProf) document.getElementById('profButtons').style.display = 'flex';
+        resizeCanvas();
     }
 
-    function sendFile(input) {
+    // --- PARTAGE DE FICHIER ---
+    function shareFile(input) {
         const file = input.files[0];
         const reader = new FileReader();
         reader.onload = (e) => {
-            const packet = { type: 'file', content: e.target.result, mime: file.type };
-            studentConns.forEach(c => c.send(packet));
-            renderFile(e.target.result, file.type);
+            currentContent = { content: e.target.result, mime: file.type };
+            renderFile(currentContent.content, currentContent.mime);
+            broadcast({ type: 'file', ...currentContent });
         };
         reader.readAsDataURL(file);
     }
 
     function renderFile(data, mime) {
-        const v = document.getElementById('view');
-        if(mime.includes('video')) v.innerHTML = `<video src="${data}" controls autoplay></video>`;
-        else if(mime.includes('pdf')) v.innerHTML = `<iframe src="${data}"></iframe>`;
-        else v.innerHTML = `<img src="${data}">`;
+        const container = document.getElementById('mediaContainer');
+        if(mime.includes('video')) container.innerHTML = `<video src="${data}" controls autoplay style="max-height:100%"></video>`;
+        else if(mime.includes('pdf')) container.innerHTML = `<iframe src="${data}" style="width:100%;height:100%"></iframe>`;
+        else container.innerHTML = `<img src="${data}" style="max-height:100%">`;
     }
 
-    function addLog(t) {
-        const c = document.getElementById('chat');
-        c.innerHTML += `<div>${t}</div>`;
-        c.scrollTop = c.scrollHeight;
+    // --- TABLEAU BLANC (INNOVATION) ---
+    function toggleDraw() {
+        drawing = !drawing;
+        canvas.classList.toggle('active', drawing);
+        document.getElementById('drawBtn').style.background = drawing ? "#ef4444" : "#f59e0b";
+    }
+
+    function resizeCanvas() {
+        canvas.width = document.getElementById('viewer').clientWidth;
+        canvas.height = document.getElementById('viewer').clientHeight;
+    }
+
+    canvas.onmousedown = (e) => { if(!drawing) return; canvas.isDrawing = true; };
+    canvas.onmousemove = (e) => {
+        if(!canvas.isDrawing) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        drawDot(x, y);
+        broadcast({ type: 'draw', x: x / canvas.width, y: y / canvas.height });
+    };
+    window.onmouseup = () => canvas.isDrawing = false;
+
+    function drawDot(x, y) {
+        ctx.fillStyle = "red";
+        ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+    }
+
+    function remoteDraw(data) {
+        drawDot(data.x * canvas.width, data.y * canvas.height);
+    }
+
+    function clearAll() { clearCanvas(); broadcast({ type: 'clear' }); }
+    function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+    // --- CHAT ET ZOOM FUNCTIONS ---
+    function sendMsg() {
+        const msg = document.getElementById('msgIn').value;
+        const name = document.getElementById('userName').value || (isProf ? "PROF" : "ÉLÈVE");
+        if(!msg) return;
+        addChat("Moi", msg);
+        broadcast({ type: 'chat', user: name, msg: msg });
+        document.getElementById('msgIn').value = "";
+    }
+
+    function raiseHand() {
+        const name = document.getElementById('userName').value || "Élève";
+        broadcast({ type: 'chat', user: "SYSTÈME", msg: `🖐️ ${name} lève la main !` });
+        addChat("Système", "Vous avez levé la main.");
+    }
+
+    function addChat(user, msg) {
+        const chat = document.getElementById('chat');
+        chat.innerHTML += `<div><b style="color:var(--primary)">${user}:</b> ${msg}</div>`;
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function broadcast(data) {
+        if(isProf) connections.forEach(c => c.send(data));
+        else if(myConn) myConn.send(data);
+    }
+
+    function updateCount() {
+        document.getElementById('peerCount').innerText = connections.length;
     }
 </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Projo-Connect | Download Edition</title>
+    <title>Projo-Connect | Version Finale</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -11,42 +11,50 @@
         * { box-sizing: border-box; }
         body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        header { height: 50px; background: var(--panel); display: flex; align-items: center; padding: 0 15px; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        /* HEADER */
+        header { height: 50px; background: var(--panel); display: flex; align-items: center; padding: 0 15px; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); z-index: 10; }
         #codeBadge { background: var(--primary); padding: 4px 12px; border-radius: 15px; font-weight: 800; font-size: 0.9rem; }
 
-        .main-container { flex: 1; display: flex; overflow: hidden; }
+        /* CONTENU */
+        .main-container { flex: 1; display: flex; overflow: hidden; position: relative; }
         .viewport { flex: 3; background: #000; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 10px; position: relative; }
         
-        /* Bouton de téléchargement flottant */
+        /* BOUTON TELECHARGER */
         #downloadBtn { 
-            position: absolute; top: 20px; right: 20px; z-index: 100; 
-            background: var(--accent); color: white; padding: 10px 15px; 
+            position: absolute; top: 15px; right: 15px; z-index: 100; 
+            background: var(--accent); color: white; padding: 8px 16px; 
             border-radius: 8px; text-decoration: none; font-weight: bold; 
-            display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: none; font-size: 0.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        #mediaContainer { width: 100%; }
-        #mediaContainer iframe { width: 100%; height: 75vh; border: none; background: white; border-radius: 8px; }
-        #mediaContainer img, #mediaContainer video { width: 100%; border-radius: 8px; }
+        #mediaContainer { width: 100%; display: flex; flex-direction: column; align-items: center; }
+        #mediaContainer iframe { width: 100%; height: 70vh; border: none; background: white; border-radius: 8px; }
+        #mediaContainer img, #mediaContainer video { max-width: 100%; border-radius: 8px; }
 
+        /* CHAT */
         .sidebar { flex: 1; min-width: 280px; background: var(--panel); border-left: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
         .chat-area { flex: 1; overflow-y: auto; padding: 10px; }
         .chat-msg { margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 0.85rem; border-left: 3px solid var(--primary); }
         .chat-msg b { color: var(--primary); display: block; font-size: 0.75rem; margin-bottom: 2px; }
 
+        /* BARRE OUTILS */
         footer { background: var(--panel); padding: 10px; display: flex; gap: 8px; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); flex-wrap: wrap; }
         .btn { border: none; padding: 10px 15px; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; background: var(--primary); }
         .btn-accent { background: var(--accent); }
+        .btn-mic-on { background: var(--danger) !important; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
         input { background: rgba(0,0,0,0.3); border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; outline: none; }
 
+        /* MOBILE */
         @media (max-width: 768px) {
             .main-container { flex-direction: column; }
-            .sidebar { height: 200px; border-left: none; }
-            #mediaContainer iframe { height: 45vh; }
+            .sidebar { height: 180px; min-width: 100%; border-left: none; border-top: 1px solid rgba(255,255,255,0.1); }
+            #mediaContainer iframe { height: 40vh; }
         }
 
-        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 200; display: flex; align-items: center; justify-content: center; }
-        .card { background: var(--panel); padding: 30px; border-radius: 20px; width: 340px; text-align: center; }
+        /* CONNEXION */
+        .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .card { background: var(--panel); padding: 30px; border-radius: 20px; width: 100%; max-width: 350px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -54,34 +62,40 @@
 
 <div id="setup" class="overlay">
     <div class="card">
-        <h2 style="margin-bottom:20px">📽️ Projo-Connect</h2>
+        <h2 style="margin-top:0">📽️ Projo-Connect</h2>
         <div id="login-form">
-            <input type="text" id="userName" placeholder="Ton nom complet" style="width:100%; margin-bottom:15px">
-            <button class="btn" style="width:100%; margin-bottom:10px" onclick="createRoom()">➕ Créer Salle (Prof)</button>
-            <div style="margin: 10px 0; opacity:0.3">OU</div>
+            <input type="text" id="userName" placeholder="Ton Nom Complet" style="width:100%; margin-bottom:15px">
+            
+            <p style="font-size: 0.8rem; opacity: 0.5; margin-bottom: 10px;">PROFESSEUR</p>
+            <button class="btn" style="width:100%; margin-bottom:20px" onclick="createRoom()">➕ Créer la Salle</button>
+            
+            <p style="font-size: 0.8rem; opacity: 0.5; margin-bottom: 10px;">ÉLÈVE</p>
             <input type="text" id="inputCode" placeholder="Code à 4 chiffres" style="width:100%; text-align:center; font-weight:bold; margin-bottom:10px">
-            <button class="btn btn-accent" style="width:100%" onclick="joinRoom()">🔗 Rejoindre</button>
+            <button class="btn btn-accent" id="btnJoin" style="width:100%" onclick="joinRoom()">🔗 Rejoindre la Salle</button>
         </div>
+
         <div id="wait-view" class="hidden">
-            <h1 id="displayCode" style="font-size:3rem; color:var(--primary); margin:10px 0">----</h1>
-            <button class="btn" style="width:100%" onclick="openDashboard()">Lancer le Cours</button>
+            <p>Code généré pour les élèves :</p>
+            <h1 id="displayCode" style="font-size:3.5rem; color:var(--primary); letter-spacing:10px; margin:15px 0">----</h1>
+            <button class="btn" style="width:100%" onclick="startCourse()">Démarrer le cours</button>
         </div>
     </div>
 </div>
 
 <header>
     <div id="codeBadge">CODE: ----</div>
-    <div id="idBadge" style="font-size:0.8rem;">Utilisateur: ---</div>
+    <div id="idBadge" style="font-size:0.8rem; opacity:0.8">Déconnecté</div>
 </header>
 
 <div class="main-container">
     <div class="viewport">
-        <a id="downloadBtn" download="cours-document">📥 Télécharger le fichier</a>
+        <a id="downloadBtn" download="cours-document">📥 Enregistrer le fichier</a>
         
         <div id="mediaContainer">
-            <div style="margin-top:80px; opacity:0.2; text-align:center">En attente...</div>
+            <div style="margin-top:100px; opacity:0.2; text-align:center">En attente de diffusion...</div>
         </div>
     </div>
+
     <aside class="sidebar">
         <div class="chat-area" id="chatBox"></div>
         <div style="padding:10px; display:flex; gap:5px; background:rgba(0,0,0,0.2)">
@@ -92,65 +106,78 @@
 </div>
 
 <footer>
-    <button id="micBtn" class="btn" onclick="toggleMic()">🎤 Mic</button>
+    <button id="micBtn" class="btn" onclick="toggleMic()">🎤 Micro Off</button>
     <div id="profTools" class="hidden" style="display:flex; gap:5px; flex:1">
-        <button class="btn" onclick="document.getElementById('fileIn').click()">📁</button>
-        <input type="text" id="webUrl" placeholder="Lien (URL)..." style="flex:1; margin:0">
-        <button class="btn btn-accent" onclick="shareWeb()">🌐 Envoyer</button>
-        <button id="removeBtn" class="btn" style="background:var(--danger); display:none" onclick="clearMedia()">🗑️</button>
+        <button class="btn" onclick="document.getElementById('fileIn').click()">📁 Fichier</button>
+        <input type="text" id="webUrl" placeholder="Lien URL..." style="flex:1; margin:0">
+        <button class="btn btn-accent" onclick="shareWeb()">Partager</button>
     </div>
     <input type="file" id="fileIn" hidden onchange="handleFile(this)">
 </footer>
 
-<audio id="remoteAudio" autoplay></audio>
+<div id="audioPeers"></div>
 
 <script>
     let peer, myConn, connections = [];
-    let isProf = false, currentContent = null, localStream = null, roomCode = "";
+    let isProf = false, currentContent = null, localStream = null, myRoomCode = "";
     let myName = "";
 
+    // --- INITIALISATION ---
     function createRoom() {
         myName = document.getElementById('userName').value.trim();
-        if(!myName) return alert("Nom requis.");
-        roomCode = Math.floor(1000 + Math.random() * 9000).toString();
-        peer = new Peer("ROOM-" + roomCode);
+        if(!myName) return alert("Mets ton nom d'abord !");
+        
+        myRoomCode = Math.floor(1000 + Math.random() * 9000).toString();
+        peer = new Peer("ROOM-" + myRoomCode);
+
         peer.on('open', () => {
             isProf = true;
             document.getElementById('login-form').classList.add('hidden');
             document.getElementById('wait-view').classList.remove('hidden');
-            document.getElementById('displayCode').innerText = roomCode;
-            document.getElementById('idBadge').innerText = "Prof: " + myName;
-            document.getElementById('codeBadge').innerText = "CODE: " + roomCode;
+            document.getElementById('displayCode').innerText = myRoomCode;
+            updateInterface(myRoomCode, "Prof: " + myName);
         });
+
         peer.on('connection', (conn) => {
             connections.push(conn);
-            conn.on('data', (data) => handleData(data));
+            conn.on('data', (data) => handleIncomingData(data));
             if(currentContent) setTimeout(() => conn.send(currentContent), 1000);
         });
-        handleMicCalls();
+
+        listenForCalls();
     }
 
     function joinRoom() {
         myName = document.getElementById('userName').value.trim();
-        const code = document.getElementById('inputCode').value.trim();
-        if(!myName || !code) return alert("Nom et Code requis.");
+        myRoomCode = document.getElementById('inputCode').value.trim();
+        
+        if(!myName || myRoomCode.length < 4) return alert("Remplis ton NOM et le CODE !");
+
         peer = new Peer();
         peer.on('open', () => {
-            myConn = peer.connect("ROOM-" + code, { metadata: { name: myName } });
+            myConn = peer.connect("ROOM-" + myRoomCode, { metadata: { name: myName } });
             myConn.on('open', () => {
                 isProf = false;
-                document.getElementById('idBadge').innerText = "Élève: " + myName;
-                document.getElementById('codeBadge').innerText = "CODE: " + code;
+                updateInterface(myRoomCode, "Élève: " + myName);
                 document.getElementById('setup').classList.add('hidden');
+                addMessage("Système", "Bienvenue dans le cours !");
             });
-            myConn.on('data', (data) => handleData(data));
+            myConn.on('data', (data) => handleIncomingData(data));
         });
-        handleMicCalls();
+        
+        peer.on('error', () => alert("Salle introuvable ! Vérifie le code."));
+        listenForCalls();
     }
 
-    function handleData(data) {
+    function startCourse() { document.getElementById('setup').classList.add('hidden'); document.getElementById('profTools').classList.remove('hidden'); }
+    function updateInterface(code, label) {
+        document.getElementById('codeBadge').innerText = "CODE: " + code;
+        document.getElementById('idBadge').innerText = label;
+    }
+
+    // --- GESTION DES DONNÉES ---
+    function handleIncomingData(data) {
         if(data.type === 'file') renderMedia(data.content, data.mime);
-        if(data.type === 'remove') renderMedia(null, null);
         if(data.type === 'chat') addMessage(data.user, data.msg);
     }
 
@@ -158,13 +185,9 @@
         const zone = document.getElementById('mediaContainer');
         const dlBtn = document.getElementById('downloadBtn');
         
-        if(!data) { 
-            zone.innerHTML = `<div style="margin-top:80px; opacity:0.2; text-align:center">Fin de session</div>`; 
-            dlBtn.style.display = "none";
-            return; 
-        }
+        if(!data) { zone.innerHTML = "Pas de contenu"; dlBtn.style.display="none"; return; }
 
-        // Gestion du bouton téléchargement (sauf pour les liens web)
+        // Afficher bouton téléchargement si c'est un fichier
         if(mime !== 'url/web') {
             dlBtn.href = data;
             dlBtn.style.display = "block";
@@ -173,16 +196,50 @@
         }
 
         if(mime === 'url/web' || mime.includes('pdf')) {
-            zone.innerHTML = `<iframe src="${data}" allow="autoplay; fullscreen"></iframe>`;
+            zone.innerHTML = `<iframe src="${data}" allow="autoplay"></iframe>`;
         } else if(mime.includes('video')) {
-            zone.innerHTML = `<video src="${data}" controls autoplay></video>`;
+            zone.innerHTML = `<video src="${data}" controls autoplay style="width:100%"></video>`;
         } else {
-            zone.innerHTML = `<img src="${data}">`;
+            zone.innerHTML = `<img src="${data}" style="max-width:100%">`;
         }
     }
 
-    function openDashboard() { document.getElementById('setup').classList.add('hidden'); document.getElementById('profTools').classList.remove('hidden'); }
+    // --- MICROPHONE (FIXED) ---
+    async function toggleMic() {
+        const btn = document.getElementById('micBtn');
+        if(!localStream) {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                btn.innerText = "🎤 MICRO ON";
+                btn.classList.add('btn-mic-on');
+                
+                // Envoyer le son aux autres
+                const target = isProf ? connections.map(c => c.peer) : ["ROOM-" + myRoomCode];
+                target.forEach(peerId => {
+                    const call = peer.call(peerId, localStream);
+                });
+            } catch(e) { alert("Active le micro dans les paramètres !"); }
+        } else {
+            localStream.getTracks().forEach(t => t.stop());
+            localStream = null;
+            btn.innerText = "🎤 Micro Off";
+            btn.classList.remove('btn-mic-on');
+        }
+    }
 
+    function listenForCalls() {
+        peer.on('call', (call) => {
+            call.answer(null); // On répond sans envoyer notre son (sauf si activé via toggleMic)
+            call.on('stream', (remoteStream) => {
+                let audio = document.createElement('audio');
+                audio.srcObject = remoteStream;
+                audio.autoplay = true;
+                document.getElementById('audioPeers').appendChild(audio);
+            });
+        });
+    }
+
+    // --- FONCTIONS SECONDAIRES ---
     function handleFile(input) {
         const file = input.files[0];
         const reader = new FileReader();
@@ -190,7 +247,6 @@
             currentContent = { type: 'file', content: e.target.result, mime: file.type };
             renderMedia(currentContent.content, currentContent.mime);
             broadcast(currentContent);
-            document.getElementById('removeBtn').style.display = 'block';
         };
         reader.readAsDataURL(file);
     }
@@ -201,10 +257,7 @@
         currentContent = { type: 'file', content: url, mime: 'url/web' };
         renderMedia(url, 'url/web');
         broadcast(currentContent);
-        document.getElementById('removeBtn').style.display = 'block';
     }
-
-    function clearMedia() { renderMedia(null, null); broadcast({ type: 'remove' }); document.getElementById('removeBtn').style.display = 'none'; }
 
     function sendChat() {
         const msg = document.getElementById('msgInput').value;
@@ -218,27 +271,6 @@
         const box = document.getElementById('chatBox');
         box.innerHTML += `<div class="chat-msg"><b>${u}</b>${m}</div>`;
         box.scrollTop = box.scrollHeight;
-    }
-
-    async function toggleMic() {
-        const btn = document.getElementById('micBtn');
-        if(!localStream) {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                btn.classList.add('btn-accent');
-                const code = isProf ? roomCode : document.getElementById('inputCode').value;
-                if(isProf) connections.forEach(c => peer.call(c.peer, localStream));
-                else peer.call("ROOM-" + code, localStream);
-            } catch(e) { alert("Micro inaccessible."); }
-        } else {
-            localStream.getTracks().forEach(t => t.stop());
-            localStream = null;
-            btn.classList.remove('btn-accent');
-        }
-    }
-
-    function handleMicCalls() {
-        peer.on('call', (call) => { call.answer(null); call.on('stream', (s) => { document.getElementById('remoteAudio').srcObject = s; }); });
     }
 
     function broadcast(d) {
